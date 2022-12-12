@@ -1,0 +1,41 @@
+---
+- name: Create Load Balancer
+  hosts: localhost
+  connection: local
+ 
+
+  
+  tasks:
+
+    - name: Create public IP address for NLB
+      azure_rm_publicipaddress:
+        resource_group: devops-interview-gauntlet-x-skrishna
+        allocation_method: Static
+        name: pipnlb02
+      register: output_ip_address
+
+    - name: Output public IP
+      debug:
+        msg: "The public IP is {{ output_ip_address.state.ip_address }}"
+
+
+    - name: create load balancer
+      azure_rm_loadbalancer:
+        resource_group: devops-interview-gauntlet-x-skrishna
+        name: testnlb02
+        frontend_ip_configurations:
+          - name: frontendipconf02
+            public_ip_address: pipnlb02
+        backend_address_pools:
+          - name: backendaddrpool02
+        probes:
+          - name: prob02
+            port: 80
+        load_balancing_rules:
+          - name: lbrbalancingrule02
+            frontend_ip_configuration: frontendipconf02
+            backend_address_pool: backendaddrpool02
+            frontend_port: 443
+            backend_port: 80
+            probe: prob02
+

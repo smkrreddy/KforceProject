@@ -1,0 +1,28 @@
+---
+- name: Link Vnet to Web app
+  hosts: localhost
+  connection: local
+ 
+
+  
+  tasks:
+
+  - name: Create virtual network
+    azure_rm_virtualnetwork:
+      resource_group: devops-interview-gauntlet-x-skrishna
+      name: vNet1
+      address_prefixes: "10.0.0.0/16"
+
+  - name: Add subnet
+    azure_rm_subnet:
+      resource_group: devops-interview-gauntlet-x-skrishna
+      name: subnet1
+      address_prefix: "10.0.1.0/24"
+      virtual_network: vNet1
+
+  - name: Configure web app with virtual network
+    azure.azcollection.azure_rm_webappvnetconnection:
+      name: sai2141
+      resource_group: devops-interview-gauntlet-x-skrishna
+      vnet_name: vNet1
+      subnet: subnet1

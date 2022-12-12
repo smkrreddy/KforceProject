@@ -1,0 +1,63 @@
+---
+- name: Create app server
+  hosts: localhost
+  connection: local
+ 
+
+  
+  tasks:
+
+    - name: Create a windows app service plan
+      azure_rm_appserviceplan:
+        name: dvsvcplan1
+        location: eastus
+        resource_group: devops-interview-gauntlet-x-skrishna
+        sku: S1
+      register: dvsvcplan1_created
+
+
+    - name: Output app service plan
+      debug:
+        msg: "the app server  {{ dvsvcplan1_created.id }}"
+
+
+
+    - name: Create an auto scale 
+      azure_rm_autoscale:
+          target: "{{ dvsvcplan1_created.id }}"
+          enabled: true
+          location: eastus
+          profiles:
+          - count: '1'
+            name: dvautoscale1
+            rules:
+            - time_aggregation: Average
+              time_window: 10
+              direction: Increase
+              metric_name: MemoryPercentage
+              metric_resource_uri: "{{ dvsvcplan1_created.id }}"
+              value: '1'
+              threshold: 70
+              cooldown: 5
+              time_grain: 1
+              statistic: Average
+              operator: GreaterThan
+              type: ChangeCount
+            max_count: '1'
+            min_count: '1'
+            recurrence_timezone: Mountain Standard Time
+            recurrence_frequency: Week
+            recurrence_days:
+            - Monday
+            recurrence_hours:
+            - '6'
+            recurrence_mins:
+            - '0'
+          name: dvscale01
+          resource_group: devops-interview-gauntlet-x-skrishna
+    
+    - name: Create a windows web app 
+      azure_rm_webapp:
+        resource_group: devops-interview-gauntlet-x-skrishna
+        name: sai2141
+        plan: dvsvcplan1         
